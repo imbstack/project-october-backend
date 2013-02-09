@@ -1,3 +1,5 @@
+package com.october
+
 import org.apache.thrift.transport.TServerSocket
 import org.apache.thrift.server.TSimpleServer
 import org.apache.thrift.server.TServer.Args
@@ -6,6 +8,7 @@ import java.net.InetSocketAddress
 import com.twitter.finagle.builder.ServerBuilder
 import com.twitter.finagle.thrift.ThriftServerFramedCodec
 import com.twitter.util._
+import com.twitter.logging.Logger
 
 
 import october.Post
@@ -13,9 +16,16 @@ import october.PostList
 import october.Recommender
 
 class RecHandler extends october.Recommender.FutureIface {
-    override def ping(): Future[String] = Future.value("Pong")
+    private val logger = Logger.get()
 
-    override def recPosts(userId: Long): Future[PostList] = Future.value(new SPostList(Option(0.5), Seq()))
+    override def ping(): Future[String] = {
+        logger.info("Ping received.")
+        Future.value("Pong")
+    }
+
+    override def recPosts(userId: Long): Future[PostList] = {
+        Future.value(new SPostList(Option(0.5), Seq()))
+    }
 
 }
 
@@ -28,12 +38,14 @@ class SPost(val weight: Option[Double],
 }
 
 object RecServer {
+    private val logger = Logger.get(getClass)
+
     def main(args: Array[String]) {
         val protocol = new TBinaryProtocol.Factory()
         val handler = new RecHandler()
         val service = new Recommender.FinagledService(handler, protocol)
         val address = new InetSocketAddress("127.0.0.1", 9090) // TODO: config this
-        println("Server going up!")
+        logger.info("Server going up!")
         var builder = ServerBuilder()
             .codec(ThriftServerFramedCodec())
             .name("recommender_services")
