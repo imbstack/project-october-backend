@@ -16,6 +16,13 @@ class RecHandlerSuite extends FunSuite with BeforeAndAfter {
     test("ping pongs when pinged") {
         assert(handler.ping.get === "Pong")
     }
+
+    test("placeholder posts are returned with proper weights") {
+        var postlist: SPostList = handler.recPosts(0).get
+        assert(postlist.length === 10) // This is hardcoded in for now
+        assert(postlist.head.weight.get === 1.0) // This is hardcoded in for now
+        assert(postlist.last.weight.get === 0.1) // This is hardcoded in for now
+    }
 }
 
 /*
