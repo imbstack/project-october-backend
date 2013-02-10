@@ -1,4 +1,4 @@
-project-october-backend
+Project October Backend
 =======================
 [![Build Status](https://api.travis-ci.org/rxc178/project-october-backend.png)](https://travis-ci.org/rxc178/project-october-backend)
 
