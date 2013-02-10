@@ -1,6 +1,6 @@
 project-october-backend
 =======================
-[![Build Status](https://travis-ci.org/bis12/project-october-backend.png?branch=master)](https://travis-ci.org/bis12/project-october-backend)
+[![Build Status](https://travis-ci.org/rxc178/project-october-backend.png?branch=master)](https://travis-ci.org/bis12/project-october-backend)
 
 This project maintains a graph of users, posts, and comments for [Project October](https://github.com/ted27/project-october).
 
