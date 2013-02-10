@@ -26,7 +26,7 @@ Simply execute `sbt test` from the top level directory.
 
 Authors
 -------
-* [Mika Little]("http://letsgetmikaawebsite.com")
-* [Tom Dooner]("http://tomdooner.com")
-* [Brian Stack]("http://brianstack.net")
-* [Raja Cherukuri]("http://rxc178.github.com/")
+* [Mika Little](http://letsgetmikaawebsite.com)
+* [Tom Dooner](http://tomdooner.com)
+* [Brian Stack](http://brianstack.net)
+* [Raja Cherukuri](http://rxc178.github.com/)
