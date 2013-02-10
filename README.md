@@ -18,7 +18,14 @@ This project requires [Scala Build Tool](http://www.scala-sbt.org/) to run.  Ins
 
 Running
 -------
-Simply execute `sbt run` from the top level directory.
+Optionally set the `OCTOBER_ENV` environment variable.  The options are
+
+* Development -- This is the standard env
+* Production -- Use this for running in production
+* Test -- You most likely should not need to use this directly
+* Remote -- Use this to run the development server for the Rails server to use
+
+Now, simply execute `sbt run` from the top level directory.
 
 Testing
 -------
