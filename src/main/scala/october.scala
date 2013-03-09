@@ -1,5 +1,7 @@
 package com.october
 
+import com.thinkaurelius.titan.core._
+
 import com.typesafe.config._
 import org.apache.thrift.transport.TServerSocket
 import org.apache.thrift.server.TSimpleServer
@@ -27,6 +29,11 @@ object RecServer {
 
     def main(args: Array[String]) {
         val config = getConfig()
+
+        // Connect to TitanDB
+        val g = TitanFactory.open("src/main/resources/" + config.getString("titan"))
+
+        // Now set up Thrift server and listen
         val protocol = new TBinaryProtocol.Factory()
         val handler = new RecHandler()
         val service = new Recommender.FinagledService(handler, protocol)

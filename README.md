@@ -14,16 +14,25 @@ View the frontend project for more detailed information on Project October.
 
 Installing
 ----------
-This project requires [Scala Build Tool](http://www.scala-sbt.org/) to run.  Install it and clone this project.  You should be good to go.
+This project requires [Cassandra](http://wiki.apache.org/cassandra/) if it is running in production.
+Follow [these instructions](http://wiki.apache.org/cassandra/GettingStarted) on how to set it up.
+
+*Make sure to use the 1.1.x release of Cassandra until Titan is updated*
+
+This project requires [Scala Build Tool](http://www.scala-sbt.org/) to run.  Install it and clone this project.
+
+You should be good to go.
 
 Running
 -------
+First, start your Cassandra server if you're using it.  Next, edit the conf files in `src/main/resources/*` and make sure your settings are correct.  
+
 Optionally set the `OCTOBER_ENV` environment variable.  The options are
 
-* Development -- This is the standard env
-* Production -- Use this for running in production
-* Test -- You most likely should not need to use this directly
-* Remote -- Use this to run the development server for the Rails server to use
+* `development` -- This is the standard env
+* `production` -- Use this for running in production
+* `test` -- You most likely should not need to use this directly
+* `remote` -- Use this to run the development server for the Rails server to use
 
 Now, simply execute `sbt run` from the top level directory.
 
