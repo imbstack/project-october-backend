@@ -6,11 +6,7 @@ import com.thinkaurelius.titan.core._
 
 import com.twitter.util._
 import com.twitter.logging.Logger
-import october.Action
-import october.User
-import october.Post
-import october.PostList
-import october.Recommender
+import october._
 
 class RecHandler(graph: TitanGraph) extends october.Recommender.FutureIface {
     private val logger = Logger.get()
