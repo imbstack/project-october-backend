@@ -1,13 +1,13 @@
 Project October Backend
 =======================
-[![Build Status](https://api.travis-ci.org/rxc178/project-october-backend.png)](https://travis-ci.org/rxc178/project-october-backend)
+[![Build Status](https://api.travis-ci.org/bis12/project-october-backend.png)](https://travis-ci.org/bis12/project-october-backend)
 
 This project maintains a graph of users, posts, and comments for [Project October](https://github.com/ted27/project-october).
 
 The three main components of Project October are:
 
 * Frontend https://github.com/ted27/project-october
-* Backend https://github.com/rxc178/project-october-backend
+* Backend https://github.com/bis12/project-october-backend
 * Thrift API https://github.com/bis12/project-october-api
 
 View the frontend project for more detailed information on Project October.
