@@ -1,5 +1,7 @@
 package com.october
 
+import com.tinkerpop.blueprints._
+import com.tinkerpop.blueprints.TransactionalGraph.Conclusion
 import com.thinkaurelius.titan.core._
 
 import com.typesafe.config._
@@ -31,11 +33,17 @@ object RecServer {
         val config = getConfig()
 
         // Connect to TitanDB
-        val g = TitanFactory.open("src/main/resources/" + config.getString("titan"))
+        val g: TitanGraph = TitanFactory.open("src/main/resources/" + config.getString("titan"))
+
+        // Add indices here to add them to the graph
+        val indices = List("userId")
+        val current_indices = g.getIndexedKeys(classOf[Vertex])
+        for (key <- indices if !current_indices.contains(key)) g.createKeyIndex(key, classOf[Vertex])
+        g.stopTransaction(Conclusion.SUCCESS)
 
         // Now set up Thrift server and listen
         val protocol = new TBinaryProtocol.Factory()
-        val handler = new RecHandler()
+        val handler = new RecHandler(g)
         val service = new Recommender.FinagledService(handler, protocol)
         val address = new InetSocketAddress(config.getString("server.host"),
             config.getInt("server.port"))

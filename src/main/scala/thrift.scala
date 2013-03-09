@@ -1,5 +1,9 @@
 package com.october
 
+import com.tinkerpop.blueprints._
+import com.tinkerpop.blueprints.TransactionalGraph.Conclusion
+import com.thinkaurelius.titan.core._
+
 import com.twitter.util._
 import com.twitter.logging.Logger
 import october.Action
@@ -8,7 +12,7 @@ import october.Post
 import october.PostList
 import october.Recommender
 
-class RecHandler extends october.Recommender.FutureIface {
+class RecHandler(graph: TitanGraph) extends october.Recommender.FutureIface {
     private val logger = Logger.get()
 
     override def ping(): Future[String] = {
@@ -32,7 +36,11 @@ class RecHandler extends october.Recommender.FutureIface {
     }
 
     override def addUser(userId: Long) : Future[Boolean] = {
-        logger.info("new user!")
+        if (graph.getVertices("userId", userId).iterator().hasNext())
+            throw new IllegalArgumentException("User already exists: " + userId)
+        val u = graph.addVertex(null)
+        u.setProperty("userId", userId)
+        graph.stopTransaction(Conclusion.SUCCESS)
         Future.value(true)
     }
 }
