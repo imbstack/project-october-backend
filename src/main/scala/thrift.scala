@@ -2,6 +2,8 @@ package com.october
 
 import com.twitter.util._
 import com.twitter.logging.Logger
+import october.Action
+import october.User
 import october.Post
 import october.PostList
 import october.Recommender
@@ -14,28 +16,24 @@ class RecHandler extends october.Recommender.FutureIface {
         Future.value("Pong")
     }
 
-    override def recPosts(userId: Long): Future[SPostList] = {
-        Future.value(new SPostList(Option(0.5),
-            for (i <- 1 until 11) yield new SPost(Option(1.0/i), i)))
+    override def recPosts(userId: Long): Future[PostList] = {
+        Future.value(PostList.apply(Option(0.5),
+            for (i <- 1 until 11) yield Post.apply(i, Option(1.0/i))))
+    }
+
+    override def userVPost(userId: Long, verb: october.Action, postId: Long) : Future[Unit] = {
+        logger.info("user did something to post")
+        Future.value(false)
+    }
+
+    override def userVComment(userId: Long, verb: october.Action, commentId: Long) : Future[Unit] = {
+        logger.info("user did something to comment")
+        Future.value(false)
+    }
+
+    override def addUser(userId: Long) : Future[Boolean] = {
+        logger.info("new user!")
+        Future.value(true)
     }
 }
 
-class SPostList(val confidence: Option[Double],
-                val posts: Seq[SPost]) extends october.PostList with Seq[SPost] {
-
-    def apply(idx: Int): SPost = {
-        posts.apply(idx)
-    }
-
-    def iterator: Iterator[SPost] = {
-        posts.iterator
-    }
-
-    def length: Int = {
-        posts.length
-    }
-}
-
-class SPost(val weight: Option[Double],
-            val postId: Long) extends october.Post {
-}
