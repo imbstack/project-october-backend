@@ -4,6 +4,9 @@ import com.tinkerpop.blueprints._
 import com.tinkerpop.blueprints.TransactionalGraph.Conclusion
 import com.thinkaurelius.titan.core._
 
+import com.twitter.cassie._
+import com.twitter.finagle.stats.NullStatsReceiver
+
 import com.typesafe.config._
 import org.apache.thrift.transport.TServerSocket
 import org.apache.thrift.server.TSimpleServer
@@ -34,6 +37,11 @@ object RecServer {
 
         // Connect to TitanDB
         val g: TitanGraph = TitanFactory.open("src/main/resources/" + config.getString("titan"))
+
+        // Connect to Cassandra for vector persistence
+        // TODO: Use same Cassandra config for this and Titan
+        val cass: Cluster = new Cluster(config.getString("cassandra.host"), NullStatsReceiver)
+        val posts = cass.keyspace("posts").connect()
 
         // Add indices here to add them to the graph
         val indices = List("userId")
