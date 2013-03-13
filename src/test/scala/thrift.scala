@@ -5,12 +5,22 @@ import org.scalatest.BeforeAndAfter
 import com.twitter.util._
 import com.october._
 
+import com.tinkerpop.blueprints._
+import com.tinkerpop.blueprints.TransactionalGraph.Conclusion
+import com.thinkaurelius.titan.core._
+
+import com.twitter.cassie._
+import com.twitter.finagle.stats.NullStatsReceiver
+
 class RecHandlerSuite extends FunSuite with BeforeAndAfter {
 
     var handler: RecHandler = _
 
     before {
-        handler = new RecHandler
+        val g: TitanGraph = TitanFactory.open("/tmp/octoborg/")
+        val cass = new Cluster("nonhost")
+        val p: Keyspace = cass.keyspace("posts").connect()
+        handler = new RecHandler(g, p)
     }
 
     test("ping pongs when pinged") {
@@ -18,43 +28,17 @@ class RecHandlerSuite extends FunSuite with BeforeAndAfter {
     }
 
     test("placeholder posts are returned with proper weights") {
-        var postlist: SPostList = handler.recPosts(0).get
-        assert(postlist.length === 10) // This is hardcoded in for now
-        assert(postlist.head.weight.get === 1.0) // This is hardcoded in for now
-        assert(postlist.last.weight.get === 0.1) // This is hardcoded in for now
-    }
-}
-
-/*
- * Note:  The following test suites have tests which don't do
- * very much at all.  These are placeholders (for the most part)
- * until useful things are done with these classes.
- *
- * ___ Remember to remove placeholders and this message ___
- */
-
-class PostListSuite extends FunSuite with BeforeAndAfter {
-
-    var postlist: SPostList = _
-
-    before {
-        postlist = new SPostList(Option(1.0), Seq())
+        var postlist: october.PostList = handler.recPosts(0).get
+        assert(postlist.posts.length === 10) // This is hardcoded in for now
+        assert(postlist.posts.head.weight.get === 1.0) // This is hardcoded in for now
+        assert(postlist.posts.last.weight.get === 0.1) // This is hardcoded in for now
     }
 
-    test("equality is fun") {
-        assert(1 === 1)
+    test("posts can be submitted") {
+        assert(handler.addPost(0,0,Seq()).get())
     }
-}
 
-class PostSuite extends FunSuite with BeforeAndAfter {
-
-    var post: SPost = _
-
-    before {
-        post = new SPost(Option(1.0), 0)
-    }
-    
-    test("inequality is also fun") {
-        assert(1 < 2)
+    test("users can be created") {
+        assert(handler.addUser(0).get())
     }
 }
