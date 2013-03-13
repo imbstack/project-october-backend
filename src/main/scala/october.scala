@@ -40,8 +40,8 @@ object RecServer {
 
         // Connect to Cassandra for vector persistence
         // TODO: Use same Cassandra config for this and Titan
-        val cass: Cluster = new Cluster(config.getString("cassandra.host"), NullStatsReceiver)
-        val posts = cass.keyspace("posts").connect()
+        val cass = new Cluster(config.getString("cassandra.host"), NullStatsReceiver)
+        val posts: Keyspace = cass.keyspace("posts").connect()
 
         // Add indices here to add them to the graph
         val indices = List("userId")
@@ -51,7 +51,7 @@ object RecServer {
 
         // Now set up Thrift server and listen
         val protocol = new TBinaryProtocol.Factory()
-        val handler = new RecHandler(g)
+        val handler = new RecHandler(g, posts)
         val service = new Recommender.FinagledService(handler, protocol)
         val address = new InetSocketAddress(config.getString("server.host"),
             config.getInt("server.port"))

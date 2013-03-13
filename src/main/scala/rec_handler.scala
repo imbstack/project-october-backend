@@ -1,5 +1,8 @@
 package com.october
 
+import com.twitter.cassie._
+import octocassie._
+
 import com.tinkerpop.blueprints._
 import com.tinkerpop.blueprints.TransactionalGraph.Conclusion
 import com.thinkaurelius.titan.core._
@@ -8,7 +11,7 @@ import com.twitter.util._
 import com.twitter.logging.Logger
 import october._
 
-class RecHandler(graph: TitanGraph) extends october.Recommender.FutureIface {
+class RecHandler(graph: TitanGraph, posts: Keyspace) extends october.Recommender.FutureIface {
     private val logger = Logger.get()
 
     override def ping(): Future[String] = {
@@ -37,6 +40,12 @@ class RecHandler(graph: TitanGraph) extends october.Recommender.FutureIface {
         val u = graph.addVertex(null)
         u.setProperty("userId", userId)
         graph.stopTransaction(Conclusion.SUCCESS)
+        Future.value(true)
+    }
+
+    override def addPost(userId: Long, postId: Long, rawTokens: Seq[Token]) : Future[Boolean] = {
+        // TODO: Do something with the userId here
+        // TODO: tf-idf and stick into cassandra here
         Future.value(true)
     }
 }

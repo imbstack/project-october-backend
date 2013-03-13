@@ -1,4 +1,7 @@
 package com.october
 
-import com.twitter.cassie._
-import octocassie._
+object PostHandler {
+
+    // Do something with tf-idf here
+
+}

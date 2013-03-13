@@ -12,7 +12,7 @@ resolvers += "Twitter's Repository" at "http://maven.twttr.com/"
 
 // TitanDB/Cassandra deps
 libraryDependencies ++= Seq("com.thinkaurelius.titan" % "titan" % "0.2.0",
-                            "com.twitter" % "cassie" % "0.19.0")
+                            "com.twitter" % "cassie-core" % "0.25.0")
 
 // Testing, Thrift, and Config
 libraryDependencies ++= Seq("org.apache.thrift" % "libthrift" % "0.9.0",
