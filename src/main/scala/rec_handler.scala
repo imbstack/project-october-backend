@@ -1,7 +1,6 @@
 package com.october
 
 import com.twitter.cassie._
-import octocassie._
 
 import com.tinkerpop.blueprints._
 import com.tinkerpop.blueprints.TransactionalGraph.Conclusion
