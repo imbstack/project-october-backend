@@ -44,7 +44,12 @@ class RecHandler(graph: TitanGraph, posts: Keyspace) extends october.Recommender
 
     override def addPost(userId: Long, postId: Long, rawTokens: Seq[Token]) : Future[Boolean] = {
         // TODO: Do something with the userId here
-        // TODO: tf-idf and stick into cassandra here
+        val docVector = posts.columnFamily[LongCodec, Utf8Codec, DoubleCodec] // TODO: make a double codec.  also comment this section a lot
+        val max = rawTokens.map(_.f).reduceLeft (_ max _)
+        for (token <- rawTokens) {
+            // TODO: take each token and: 1. increment the document frequency of that token 2. calculate tf/idf and stick it in the docment
+            // value with that token as key
+        }
         Future.value(true)
     }
 }
