@@ -1,4 +1,6 @@
-package com.october
+package org.octob
+
+import october._
 
 import com.twitter.cassie._
 
@@ -8,7 +10,6 @@ import com.thinkaurelius.titan.core._
 
 import com.twitter.util._
 import com.twitter.logging.Logger
-import october._
 
 class RecHandler(graph: TitanGraph, posts: Keyspace) extends october.Recommender.FutureIface {
     private val logger = Logger.get()

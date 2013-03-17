@@ -1,4 +1,6 @@
-package com.october
+package org.octob
+
+import october.Recommender
 
 import com.tinkerpop.blueprints._
 import com.tinkerpop.blueprints.TransactionalGraph.Conclusion
@@ -15,7 +17,6 @@ import org.apache.thrift.protocol.TBinaryProtocol
 import java.net.InetSocketAddress
 import com.twitter.finagle.builder.ServerBuilder
 import com.twitter.finagle.thrift.ThriftServerFramedCodec
-import october.Recommender
 import com.twitter.logging.Logger
 
 object RecServer {

@@ -1,4 +1,4 @@
-package com.october.test
+package org.octob.test
 
 import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
