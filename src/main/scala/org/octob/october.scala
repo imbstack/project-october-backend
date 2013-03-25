@@ -37,12 +37,12 @@ object RecServer {
         val config = getConfig()
 
         // Connect to TitanDB
-        val g: TitanGraph = TitanFactory.open("src/main/resources/" + config.getString("titan"))
+        val g = TitanFactory.open("src/main/resources/" + config.getString("titan"))
 
         // Connect to Cassandra for vector persistence
         // TODO: Use same Cassandra config for this and Titan
         val cass = new Cluster(config.getString("cassandra.host"), NullStatsReceiver)
-        val posts: Keyspace = cass.keyspace("posts").connect()
+        val posts = cass.keyspace("posts").connect()
 
         // Add indices here to add them to the graph
         val indices = List("userId")
