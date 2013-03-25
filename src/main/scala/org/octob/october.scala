@@ -2,13 +2,6 @@ package org.octob
 
 import october.Recommender
 
-import com.tinkerpop.blueprints._
-import com.tinkerpop.blueprints.TransactionalGraph.Conclusion
-import com.thinkaurelius.titan.core._
-
-import com.twitter.cassie._
-import com.twitter.finagle.stats.NullStatsReceiver
-
 import com.typesafe.config._
 import org.apache.thrift.transport.TServerSocket
 import org.apache.thrift.server.TSimpleServer
@@ -36,23 +29,9 @@ object RecServer {
     def main(args: Array[String]) {
         val config = getConfig()
 
-        // Connect to TitanDB
-        val g = TitanFactory.open("src/main/resources/" + config.getString("titan"))
-
-        // Connect to Cassandra for vector persistence
-        // TODO: Use same Cassandra config for this and Titan
-        val cass = new Cluster(config.getString("cassandra.host"), NullStatsReceiver)
-        val posts = cass.keyspace("posts").connect()
-
-        // Add indices here to add them to the graph
-        val indices = List("userId")
-        val current_indices = g.getIndexedKeys(classOf[Vertex])
-        for (key <- indices if !current_indices.contains(key)) g.createKeyIndex(key, classOf[Vertex])
-        g.stopTransaction(Conclusion.SUCCESS)
-
         // Now set up Thrift server and listen
         val protocol = new TBinaryProtocol.Factory()
-        val handler = new RecHandler(g, posts)
+        val handler = new RecHandler()
         val service = new Recommender.FinagledService(handler, protocol)
         val address = new InetSocketAddress(config.getString("server.host"),
             config.getInt("server.port"))

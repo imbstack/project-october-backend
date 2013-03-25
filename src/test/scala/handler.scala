@@ -1,26 +1,18 @@
 package org.octob.test 
 
+import org.octob._
+
 import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
 import com.twitter.util._
-import com.october._
-
-import com.tinkerpop.blueprints._
-import com.tinkerpop.blueprints.TransactionalGraph.Conclusion
-import com.thinkaurelius.titan.core._
-
-import com.twitter.cassie._
-import com.twitter.finagle.stats.NullStatsReceiver
+import october._
 
 class RecHandlerSuite extends FunSuite with BeforeAndAfter {
 
     var handler: RecHandler = _
 
     before {
-        val g: TitanGraph = TitanFactory.open("/tmp/octoborg/")
-        val cass = new Cluster("nonhost")
-        val p: Keyspace = cass.keyspace("posts").connect()
-        handler = new RecHandler(g, p)
+        handler = new RecHandler()
     }
 
     test("ping pongs when pinged") {
