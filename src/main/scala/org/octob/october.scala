@@ -2,6 +2,8 @@ package org.octob
 
 import october.Recommender
 
+import com.mongodb.casbah.Imports._
+
 import com.typesafe.config._
 import org.apache.thrift.transport.TServerSocket
 import org.apache.thrift.server.TSimpleServer
@@ -29,9 +31,11 @@ object RecServer {
     def main(args: Array[String]) {
         val config = getConfig()
 
+        val mongoClient =  MongoClient(config.getString("mongo.host"), config.getInt("mongo.port"))("october")
+
         // Now set up Thrift server and listen
         val protocol = new TBinaryProtocol.Factory()
-        val handler = new RecHandler()
+        val handler = new RecHandler(mongoClient)
         val service = new Recommender.FinagledService(handler, protocol)
         val address = new InetSocketAddress(config.getString("server.host"),
             config.getInt("server.port"))

@@ -2,11 +2,13 @@ package org.octob
 
 import october._
 
+import com.mongodb.casbah.Imports._
+
 import com.twitter.util._
 import com.twitter.logging.Logger
 
 // TODO: Add other persistence hook into constructor
-class RecHandler() extends october.Recommender.FutureIface {
+class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
     private val logger = Logger.get(getClass)
 
     override def ping(): Future[String] = {
@@ -15,8 +17,9 @@ class RecHandler() extends october.Recommender.FutureIface {
     }
 
     override def recPosts(userId: Long): Future[PostList] = {
-        Future.value(PostList.apply(Option(0.5),
-            for (i <- 1 until 11) yield Post.apply(i, Option(1.0/i))))
+        logger.info("posts requested!")
+        Future.value(PostList(Option(0.5),
+            for (i <- 1 until 11) yield Post(i, Option(1.0/i))))
     }
 
     override def userVPost(userId: Long, verb: october.Action, postId: Long) : Future[Unit] = {
@@ -37,7 +40,9 @@ class RecHandler() extends october.Recommender.FutureIface {
     override def addPost(userId: Long, postId: Long, rawTokens: Seq[Token]) : Future[Boolean] = {
         logger.info("new post!")
         // TODO: Do something with the userId here
-        val max = if (rawTokens.length > 0) rawTokens.map(_.f).reduceLeft (_ max _) else 0
+        val docColl = mongo("documents")
+        docColl += MongoDBObject("docid" -> postId, "df" -> rawTokens.map((token: Token) => token.t -> token.f))
+        //val max = if (rawTokens.length > 0) rawTokens.map(_.f).reduceLeft (_ max _) else 0 // Valuable code for later, but not needed here
         for (token <- rawTokens) {
             // TODO: take each token and: 1. increment the document frequency of that token 2. calculate tf/idf and stick it in the docment
             // value with that token as key

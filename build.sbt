@@ -4,15 +4,8 @@ version := "0.1.0"
 
 scalaVersion := "2.9.2"
 
-// Need to add this repository for BerkeleyDB dep of titan
-resolvers += "Oracle Repository" at "http://download.oracle.com/maven"
-
-// Need this for cassie
-resolvers += "Twitter's Repository" at "http://maven.twttr.com/"
-
-// TitanDB/Cassandra deps
-libraryDependencies ++= Seq("com.thinkaurelius.titan" % "titan" % "0.2.0",
-                            "com.twitter" % "cassie-core" % "0.25.0")
+// MongoDB
+libraryDependencies ++= Seq("org.mongodb" %% "casbah" % "2.5.0")
 
 // Testing, Thrift, and Config
 libraryDependencies ++= Seq("org.apache.thrift" % "libthrift" % "0.9.0",
