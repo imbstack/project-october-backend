@@ -2,7 +2,8 @@ package org.octob
 
 import october._
 
-import com.mongodb.casbah.Imports._
+import com.mongodb.casbah.Imports.{ MongoDB, WriteConcern }
+import com.mongodb.casbah.query.Imports._
 
 import com.twitter.util._
 import com.twitter.logging.Logger
@@ -40,13 +41,16 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
     override def addPost(userId: Long, postId: Long, rawTokens: Seq[Token]) : Future[Boolean] = {
         logger.info("new post!")
         // TODO: Do something with the userId here
-        val docColl = mongo("documents")
-        docColl += MongoDBObject("docid" -> postId, "df" -> rawTokens.map((token: Token) => token.t -> token.f))
-        //val max = if (rawTokens.length > 0) rawTokens.map(_.f).reduceLeft (_ max _) else 0 // Valuable code for later, but not needed here
+        mongo("posts") += MongoDBObject("_id" -> postId, "tf" -> rawTokens.map((token: Token) => token.t -> token.f))
+
+        val tokColl = mongo("tokens")
         for (token <- rawTokens) {
-            // TODO: take each token and: 1. increment the document frequency of that token 2. calculate tf/idf and stick it in the docment
-            // value with that token as key
+            val query = MongoDBObject("_id" -> token.t)
+            // TODO: Maybe make this one operation?
+            tokColl.update(query, $inc("df" -> token.f), true, false)
+            tokColl.update(query, $push("posts" -> postId), true, false)
         }
+        //val max = if (rawTokens.length > 0) rawTokens.map(_.f).reduceLeft (_ max _) else 0 // Valuable code for later, but not needed here
         Future.value(true)
     }
 }
