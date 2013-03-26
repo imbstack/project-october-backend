@@ -19,8 +19,15 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
 
     override def recPosts(userId: Long): Future[PostList] = {
         logger.info("posts requested!")
-        Future.value(PostList(Option(0.5),
-            for (i <- 1 until 11) yield Post(i, Option(1.0/i))))
+        // TODO: Throw errors if user doesn't exist
+        val termMap = mongo("users").findOne(MongoDBObject("_id" -> userId), MongoDBObject("terms" -> 1))
+            .get.getAs[BasicDBObject]("terms").get
+        val docs = mongo("tokens").find("_id" $in termMap.keySet().toArray())
+            .map(_.getAs[Seq[Long]]("posts"))
+            .flatten.flatten.toSet
+        //logger.info(docs.map(docid => docid).toString)
+        // TODO: Dot Product each of these to get weights and ordering
+        Future.value(PostList(Option(0.5), docs.map( docid => Post(docid, Option(0.5))).toSeq ))
     }
 
     override def userVPost(userId: Long, verb: october.Action, postId: Long) : Future[Unit] = {
@@ -54,7 +61,6 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
             userColl.findAndModify(uQuery, MongoDBObject("terms" -> 1), MongoDBObject("_id" -> 1),
                 false, $inc("terms.".concat(token._1) -> token._2), false, true)
         }
-        //val max = if (rawTokens.length > 0) rawTokens.map(_.f).reduceLeft (_ max _) else 0 // Valuable code for later, but not needed here
         logger.info("new post committed!")
         Future.value(true)
     }
