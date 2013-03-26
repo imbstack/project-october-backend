@@ -39,18 +39,23 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
     }
 
     override def addPost(userId: Long, postId: Long, rawTokens: Seq[Token]) : Future[Boolean] = {
-        logger.info("new post!")
-        // TODO: Do something with the userId here
-        mongo("posts") += MongoDBObject("_id" -> postId, "tf" -> rawTokens.map((token: Token) => token.t -> token.f))
+        logger.info("new post submitted!")
+        val tokens = rawTokens map ((token:Token) => token.t.filterNot((p:Char) => p == '.' || p == '$') -> token.f)
+        mongo("posts") += MongoDBObject("_id" -> postId, "tf" -> tokens)
 
         val tokColl = mongo("tokens")
-        for (token <- rawTokens) {
-            val query = MongoDBObject("_id" -> token.t)
+        val userColl = mongo("users")
+        val uQuery = MongoDBObject("_id" -> userId)
+        for (token <- tokens) {
+            val query = MongoDBObject("_id" -> token._1)
             // TODO: Maybe make this one operation?
-            tokColl.update(query, $inc("df" -> token.f), true, false)
+            tokColl.update(query, $inc("df" -> token._2), true, false)
             tokColl.update(query, $push("posts" -> postId), true, false)
+            userColl.findAndModify(uQuery, MongoDBObject("terms" -> 1), MongoDBObject("_id" -> 1),
+                false, $inc("terms.".concat(token._1) -> token._2), false, true)
         }
         //val max = if (rawTokens.length > 0) rawTokens.map(_.f).reduceLeft (_ max _) else 0 // Valuable code for later, but not needed here
+        logger.info("new post committed!")
         Future.value(true)
     }
 }
