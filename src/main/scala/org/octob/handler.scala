@@ -42,6 +42,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
 
     override def addUser(userId: Long) : Future[Boolean] = {
         logger.info("new user!")
+        mongo("users").insert(MongoDBObject("_id" -> userId))
         Future.value(true)
     }
 
