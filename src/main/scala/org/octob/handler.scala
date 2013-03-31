@@ -22,6 +22,8 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
         // TODO: Throw errors if user doesn't exist
         val termMap = mongo("users").findOne(MongoDBObject("_id" -> userId), MongoDBObject("terms" -> 1))
             .get.getAs[BasicDBObject]("terms").get
+        // TODO: return confidence as 0 if the user is new and 1 otherwise.
+        // this will let the frontend know if it is a new user
         val docs = mongo("tokens").find("_id" $in termMap.keySet().toArray())
             .map(_.getAs[Seq[Long]]("posts"))
             .flatten.flatten.toSet
@@ -42,7 +44,8 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
 
     override def addUser(userId: Long) : Future[Boolean] = {
         logger.info("new user!")
-        mongo("users").insert(MongoDBObject("_id" -> userId))
+        mongo("users").insert(MongoDBObject("_id" -> userId,
+                                            "terms" -> MongoDBObject()))
         Future.value(true)
     }
 
