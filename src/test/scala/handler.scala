@@ -2,7 +2,6 @@ package org.octob.test
 
 import org.octob._
 
-import com.foursquare.fongo.Fongo
 import com.mongodb.casbah.Imports._
 
 import org.scalatest.FunSuite
@@ -13,11 +12,15 @@ import october._
 class RecHandlerSuite extends FunSuite with BeforeAndAfter {
 
     var handler: RecHandler = _
+    var mongo: MongoDB = _
 
     before {
-        val fongo = new Fongo("mongoserver")
-        val mongoClient =  MongoClient(fongo.getServerAddress())("october")
-        handler = new RecHandler(mongoClient)
+        mongo =  MongoClient()("october-test")
+        handler = new RecHandler(mongo)
+    }
+
+    after {
+        mongo.dropDatabase()
     }
 
     test("ping pongs when pinged") {
@@ -36,6 +39,6 @@ class RecHandlerSuite extends FunSuite with BeforeAndAfter {
     }
 
     test("users can be created") {
-        assert(handler.addUser(0).get())
+        assert(handler.addUser(1).get())
     }
 }

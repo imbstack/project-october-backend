@@ -5,8 +5,7 @@ version := "0.1.0"
 scalaVersion := "2.9.2"
 
 // MongoDB
-libraryDependencies ++= Seq("org.mongodb" %% "casbah" % "2.5.0",
-                            "com.foursquare" % "fongo" % "1.0.6") //Mock Mongo
+libraryDependencies ++= Seq("org.mongodb" %% "casbah" % "2.5.0")
 
 // Testing, Thrift, and Config
 libraryDependencies ++= Seq("org.apache.thrift" % "libthrift" % "0.9.0",
