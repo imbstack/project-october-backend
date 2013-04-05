@@ -50,7 +50,19 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
 
     override def userVPost(userId: Long, verb: october.Action, postId: Long) : Future[Unit] = {
         logger.info("user did something to post")
-        Future.value(false)
+        // TODO: Error stuff when things don't exist... maybe
+        val uQuery = MongoDBObject("_id" -> userId)
+        val post = PostDAO.findOneByID(id = postId).get
+        var multiplier = verb match {
+            case october.Action.VoteUp => 1
+            case october.Action.VoteDown => -1
+            //case october.Action.VOTE_NEGATE => Determine if was up or down before?
+            case _ => 1 // This all assumes that the only actions users take are up/down voting
+        }
+        post.tokens.foreach { token =>
+            UserDAO.update(uQuery, $inc("tokens.".concat(token._1) -> multiplier * token._2), false, true)
+        }
+        Future.value(true)
     }
 
     override def userVComment(userId: Long, verb: october.Action, commentId: Long) : Future[Unit] = {
