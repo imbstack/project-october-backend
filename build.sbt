@@ -4,8 +4,11 @@ version := "0.1.0"
 
 scalaVersion := "2.9.2"
 
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
 // MongoDB
-libraryDependencies ++= Seq("org.mongodb" %% "casbah" % "2.5.0")
+libraryDependencies ++= Seq("org.mongodb" %% "casbah" % "2.5.0",
+                            "com.novus" %% "salat" % "1.9.2-SNAPSHOT")
 
 // Testing, Thrift, and Config
 libraryDependencies ++= Seq("org.apache.thrift" % "libthrift" % "0.9.0",

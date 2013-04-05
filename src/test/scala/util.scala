@@ -16,6 +16,7 @@ class UtilSuite extends FunSuite with BeforeAndAfter {
     logconf()
 
     val VMap = Map[String,Double] _
+    val LMap = Map[String,Long] _
 
     test("dot products accept empty maps") {
         val map1 = VMap()
@@ -38,6 +39,14 @@ class UtilSuite extends FunSuite with BeforeAndAfter {
         val map2 = VMap("a" -> 2.0)
         expect(3.0) {
             Util.dotProduct(map1, map2)
+        }
+    }
+
+    test("tfidf works in expected case") {
+        val userMap = LMap("a" -> 10, "b" -> 15, "c" -> 12)
+        val docCountMap = LMap("a" -> 2, "b" -> 12, "c" -> 1)
+        expect(Map("a" -> 8.333333333333332, "b" -> 2.0833333333333335, "c" -> 20.0)) {
+            Util.tfIdfVec(userMap, 25, docCountMap)
         }
     }
 }

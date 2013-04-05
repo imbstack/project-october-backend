@@ -17,6 +17,8 @@ class RecHandlerSuite extends FunSuite with BeforeAndAfter {
     before {
         mongo =  MongoClient()("october-test")
         handler = new RecHandler(mongo)
+        handler.addUser(10l)
+        handler.addPost(10l, 1l, Seq(Token("a", 1), Token("b", 23)))
     }
 
     after {
@@ -27,18 +29,18 @@ class RecHandlerSuite extends FunSuite with BeforeAndAfter {
         assert(handler.ping.get === "Pong")
     }
 
-    //test("placeholder posts are returned with proper weights") {
-        //var postlist: Future[october.PostList] = handler.recPosts(0)
-        //assert(postlist.posts.length === 10) // This is hardcoded in for now
-        //assert(postlist.posts.head.weight.get === 1.0) // This is hardcoded in for now
-        //assert(postlist.posts.last.weight.get === 0.1) // This is hardcoded in for now
-    //}
+    test("posts can be recommended") {
+        handler.addPost(10l, 2l, Seq(Token("b", 1), Token("c", 21), Token("e", 2)))
+        handler.addPost(10l, 3l, Seq(Token("a", 3), Token("d", 3)))
+        var postlist: Future[october.PostList] = handler.recPosts(10l)
+        assert(postlist.get.posts.size > 0)
+    }
 
     test("posts can be submitted") {
-        assert(handler.addPost(0,0,Seq()).get())
+        assert(handler.addPost(11l,4l,Seq(Token("a", 3))).get())
     }
 
     test("users can be created") {
-        assert(handler.addUser(1).get())
+        assert(handler.addUser(11l).get())
     }
 }

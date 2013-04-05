@@ -14,12 +14,14 @@ object Util {
     }
 
     /**
-     * Takes a vector and a map of terms to calculate the IDF for each term in the vector
+     * Takes a vector and a map of terms to calculate the TF-IDF for each term in the vector
      *
      * @param vec, the vector to operate on
-     * @param dfs, the map of terms to their global frequency
+     * @param docCount, the number of documents submitted
+     * @param countMap, a map of term to number of documents containing that term
      */
-    def idfVec(vec: Map[String,Long], dfs: Map[String,Long]): Map[String,Double] = {
-        Map("a" -> 0.0)
-    }
+    def tfIdfVec(vec: Map[String,Long], docCount: Long, countMap: Map[String,Long]): Map[String,Double] =
+        vec.map {case (s: String, v: Long) =>
+            s -> (v.toDouble / (0l /: vec) { case (a: Long, (k: String, v: Long)) =>
+                (if (a > v) a else v)}) * (docCount.toDouble / countMap.getOrElse(s, docCount))}
 }
