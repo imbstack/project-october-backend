@@ -47,6 +47,18 @@ class RecHandlerSuite extends FunSuite with BeforeAndAfter {
     test("downvotes effect properly") {
     }
 
+    test("undo upvotes effect properly") {
+    }
+
+    test("undo downvotes effect properly") {
+    }
+
+    test("text search does something sane") {
+    }
+
+    test("user top terms gives the proper terms") {
+    }
+
     test("posts can be submitted") {
         assert(handler.addPost(11l,4l,Seq(Token("a", 3))).get())
     }
