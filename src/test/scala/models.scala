@@ -26,12 +26,12 @@ class ModelSuite extends FunSuite with BeforeAndAfter {
     }
 
     test("user can be created") {
-        val u = MUser(id = 0, tokens=Map[String,Long]())
+        val u = MUser(id = 0, tokens=Map[String,Long](), friends=Seq[Long]())
     }
 
     test("users can be inserted") {
         object UserDAO extends SalatDAO[MUser, Long](collection = mongo("users"))
-        val u = MUser(id=1, tokens=Map[String,Long]())
+        val u = MUser(id=1, tokens=Map[String,Long](), friends=Seq[Long]())
         UserDAO.insert(u)
         val user: MUser = UserDAO.findOneByID(id = 1).get
     }

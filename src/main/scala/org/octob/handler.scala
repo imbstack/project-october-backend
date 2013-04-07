@@ -32,7 +32,17 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
         Future.value(true)
     }
 
-    override def userVuser(actionerId: Long, actio: october.Action, actioneeId: Long): Future[Boolean] = {
+    override def userVuser(actionerId: Long, action: october.Action, actioneeId: Long): Future[Boolean] = {
+
+        action match {
+            case october.Action.Follow => UserDAO.update(MongoDBObject("_id" -> actionerId),
+                                                         $push("friends" -> actioneeId),
+                                                         true,
+                                                         false)
+            case _ => 
+        }
+
+        // TODO: make all of these return trues to a more functional thing
         Future.value(true)
     }
 
@@ -95,7 +105,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
 
     override def addUser(userId: Long) : Future[Boolean] = {
         logger.info("new user!")
-        val u = MUser(id=userId, tokens=Map[String,Long]())
+        val u = MUser(id=userId, tokens=Map[String,Long](), friends=Seq[Long]())
         UserDAO.insert(u, new WriteConcern(1))
         Future.value(true)
     }

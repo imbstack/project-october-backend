@@ -59,6 +59,13 @@ class RecHandlerSuite extends FunSuite with BeforeAndAfter {
         }
     }
 
+    test("users can follow each other") {
+        handler.userVuser(10l, october.Action.Follow, 20l)
+        expect(Seq[Long](20)) {
+            mongo("users").findOne(MongoDBObject("_id" -> 10l)).get.getAs[BasicDBObject]("friends").get
+        }
+    }
+
     test("posts can be submitted") {
         assert(handler.addPost(11l,4l,Seq(Token("a", 3))).get())
     }
