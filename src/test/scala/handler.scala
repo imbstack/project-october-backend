@@ -37,26 +37,19 @@ class RecHandlerSuite extends FunSuite with BeforeAndAfter {
         assert(postlist.get.posts.size > 0)
     }
 
-    test("upvotes effect properly") {
-        handler.addPost(10l, 4l, Seq(Token("a", 1), Token("b", 1)))
-        handler.addPost(20l, 5l, Seq(Token("b", 1), Token("c", 1)))
-        handler.userVPost(10l, october.Action.VoteUp, 5l)
-        println(mongo("users").find(MongoDBObject("id" -> 10l)) mkString ", ")
-    }
-
-    test("downvotes effect properly") {
-    }
-
-    test("undo upvotes effect properly") {
-    }
-
-    test("undo downvotes effect properly") {
-    }
-
     test("text search does something sane") {
+        handler.addPost(10l, 1l, Seq(Token("a", 1), Token("b", 23)))
+        handler.addPost(10l, 2l, Seq(Token("b", 1), Token("c", 21), Token("e", 2)))
+        expect(Map(2 -> 2.1904761904761907)) {
+            handler.textSearch(Seq("c", "e")).get
+        }
     }
 
     test("user top terms gives the proper terms") {
+        handler.addPost(10l, 2l, Seq(Token("b", 1), Token("c", 21), Token("e", 2)))
+        expect(Map("c" -> 21)) {
+            handler.userTopTerms(10l,1).get
+        }
     }
 
     test("posts can be submitted") {
@@ -65,5 +58,41 @@ class RecHandlerSuite extends FunSuite with BeforeAndAfter {
 
     test("users can be created") {
         assert(handler.addUser(11l).get())
+    }
+
+    test("upvotes effect properly") {
+        handler.addPost(10l, 4l, Seq(Token("a", 1), Token("b", 1)))
+        handler.addPost(20l, 5l, Seq(Token("b", 1), Token("c", 1)))
+        handler.userVpost(10l, october.Action.VoteUp, 5l)
+        expect("{ \"a\" : 1 , \"b\" : 2 , \"c\" : 1}") {
+            mongo("users").findOne(MongoDBObject("_id" -> 10l)).get("tokens").toString
+        }
+    }
+
+    test("downvotes effect properly") {
+        handler.addPost(10l, 4l, Seq(Token("a", 1), Token("b", 1)))
+        handler.addPost(20l, 5l, Seq(Token("b", 1), Token("c", 1)))
+        handler.userVpost(10l, october.Action.VoteDown, 5l)
+        expect("{ \"a\" : 1 , \"b\" : 0 , \"c\" : -1}") {
+            mongo("users").findOne(MongoDBObject("_id" -> 10l)).get("tokens").toString
+        }
+    }
+
+    test("undo upvotes effect properly") {
+        handler.addPost(10l, 4l, Seq(Token("a", 1), Token("b", 1)))
+        handler.addPost(20l, 5l, Seq(Token("b", 1), Token("c", 1)))
+        handler.userVpost(10l, october.Action.VoteUpNegate, 5l)
+        expect("{ \"a\" : 1 , \"b\" : 0 , \"c\" : -1}") {
+            mongo("users").findOne(MongoDBObject("_id" -> 10l)).get("tokens").toString
+        }
+    }
+
+    test("undo downvotes effect properly") {
+        handler.addPost(10l, 4l, Seq(Token("a", 1), Token("b", 1)))
+        handler.addPost(20l, 5l, Seq(Token("b", 1), Token("c", 1)))
+        handler.userVpost(10l, october.Action.VoteDownNegate, 5l)
+        expect("{ \"a\" : 1 , \"b\" : 2 , \"c\" : 1}") {
+            mongo("users").findOne(MongoDBObject("_id" -> 10l)).get("tokens").toString
+        }
     }
 }

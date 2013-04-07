@@ -26,7 +26,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
 
     // TODO: Consider using a top-k algorithm for this
     override def userTopTerms(userId: Long, limit: Int): Future[Map[String, Long]] = Future.value(
-        UserDAO.findOneByID(id = userId).get.tokens.toList.sortBy{_._2}.slice(0, limit).toMap)
+        UserDAO.findOneByID(id = userId).get.tokens.toList.sortBy{-_._2}.slice(0, limit).toMap)
 
     override def textSearch(tokens: Seq[String]): Future[Map[Long, Double]] = Future.value(searchInternal(tokens.map(x => (x -> 1l)).toMap))
 
@@ -58,7 +58,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
             ))}.toMap
     }
 
-    override def userVPost(userId: Long, verb: october.Action, postId: Long) : Future[Boolean] = {
+    override def userVpost(userId: Long, verb: october.Action, postId: Long) : Future[Boolean] = {
         logger.info("user did something to post")
         // TODO: Error stuff when things don't exist... maybe
         val uQuery = MongoDBObject("_id" -> userId)
@@ -76,7 +76,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
         Future.value(true)
     }
 
-    override def userVComment(userId: Long, verb: october.Action, commentId: Long) : Future[Boolean] = {
+    override def userVcomment(userId: Long, verb: october.Action, commentId: Long) : Future[Boolean] = {
         logger.info("user did something to comment")
         Future.value(true)
     }
