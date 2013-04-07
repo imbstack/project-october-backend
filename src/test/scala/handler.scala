@@ -52,6 +52,13 @@ class RecHandlerSuite extends FunSuite with BeforeAndAfter {
         }
     }
 
+    test("tokens can be added to users without a new post") {
+        handler.addUserTerms(10l, Seq[String]("a", "b", "c", "g"))
+        expect(Map("a" -> 1, "b" -> 1, "c" -> 1, "g" -> 1)) {
+            handler.userTopTerms(10l,4).get
+        }
+    }
+
     test("posts can be submitted") {
         assert(handler.addPost(11l,4l,Seq(Token("a", 3))).get())
     }

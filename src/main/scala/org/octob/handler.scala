@@ -24,6 +24,18 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
         Future.value("Pong")
     }
 
+    override def addUserTerms(userId: Long, terms: Seq[String]): Future[Boolean] = {
+        val uQuery = MongoDBObject("_id" -> userId)
+        for (term <- terms) {
+            UserDAO.update(uQuery, $inc("tokens.".concat(term.filterNot((p:Char) => p == '.' || p == '$')) -> 1l), false, true)
+        }
+        Future.value(true)
+    }
+
+    override def userVuser(actionerId: Long, actio: october.Action, actioneeId: Long): Future[Boolean] = {
+        Future.value(true)
+    }
+
     // TODO: Consider using a top-k algorithm for this
     override def userTopTerms(userId: Long, limit: Int): Future[Map[String, Long]] = Future.value(
         UserDAO.findOneByID(id = userId).get.tokens.toList.sortBy{-_._2}.slice(0, limit).toMap)
