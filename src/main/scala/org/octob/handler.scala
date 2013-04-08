@@ -32,7 +32,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
         Future.value(true)
     }
 
-    override def userVuser(actionerId: Long, action: october.Action, actioneeId: Long): Future[Boolean] = {
+    override def userToUser(actionerId: Long, action: october.Action, actioneeId: Long): Future[Boolean] = {
 
         action match {
             case october.Action.Follow => UserDAO.update(MongoDBObject("_id" -> actionerId),
@@ -87,7 +87,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
             ))}.toMap
     }
 
-    override def userVpost(userId: Long, verb: october.Action, postId: Long) : Future[Boolean] = {
+    override def userToPost(userId: Long, verb: october.Action, postId: Long) : Future[Boolean] = {
         logger.info("user did something to post")
         // TODO: Error stuff when things don't exist... maybe
         val uQuery = MongoDBObject("_id" -> userId)
@@ -105,7 +105,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
         Future.value(true)
     }
 
-    override def userVcomment(userId: Long, verb: october.Action, commentId: Long) : Future[Boolean] = {
+    override def userToComment(userId: Long, verb: october.Action, commentId: Long) : Future[Boolean] = {
         logger.info("user did something to comment")
         Future.value(true)
     }
