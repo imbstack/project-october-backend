@@ -50,16 +50,23 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
     override def userTopTerms(userId: Long, limit: Int): Future[Map[String, Long]] = Future.value(
         UserDAO.findOneByID(id = userId).get.tokens.toList.sortBy{-_._2}.slice(0, limit).toMap)
 
-    override def textSearch(tokens: Seq[String]): Future[Map[Long, Double]] = Future.value(searchInternal(tokens.map(x => (x -> 1l)).toMap))
+    // TODO: Make the limit in this and recPosts work on the database level!
+    override def textSearch(tokens: Seq[String], limit: Int): Future[Map[Long, Double]] = Future.value(
+        searchInternal(tokens.map(x => (x -> 1l)).toMap).toList.sortBy{-_._2}.slice(0, limit).toMap)
 
-    override def recPosts(userId: Long): Future[PostList] = {
+    override def recPosts(userId: Long, limit: Int): Future[PostList] = {
         logger.info("posts requested!")
         // TODO: Throw errors if user doesn't exist
         val user: MUser = UserDAO.findOneByID(id = userId).get
-        val results: Map[Long, Double] = searchInternal(user.tokens)
+        // TODO: Get all of the friends in one query rather than a bunch of findOnes
+        val results: Map[Long, Double] = (searchInternal(user.tokens) /: user.friends) {
+            case (a: Map[Long, Double], b: Long) => a ++ searchInternal(UserDAO.findOneByID(id = b).get.tokens).map {
+                case ((a: Long, b: Double)) => (a -> 0.45 * b) // TODO: Make that scale not a magic value
+            }
+        }
 
         // TODO: Merge these into a list returned from friends!
-        Future.value(PostList(Option(0.5), results.map(post => Post(post._1, Some(post._2))).toSeq))
+        Future.value(PostList(Option(0.5), results.map(post => Post(post._1, Some(post._2))).toSeq.slice(0, limit)))
     }
 
     def searchInternal(tokens: Map[String, Long]): Map[Long, Double] = {
