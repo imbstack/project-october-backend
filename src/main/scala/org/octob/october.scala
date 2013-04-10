@@ -31,7 +31,7 @@ object RecServer {
     def main(args: Array[String]) {
         val config = getConfig()
 
-        val mongoClient =  MongoClient(config.getString("mongo.host"), config.getInt("mongo.port"))("october")
+        val mongoClient =  MongoClient(config.getString("mongo.host"), config.getInt("mongo.port"))(config.getString("mongo.db"))
 
         // Now set up Thrift server and listen
         val protocol = new TBinaryProtocol.Factory()
