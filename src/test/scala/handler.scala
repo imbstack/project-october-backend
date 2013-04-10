@@ -16,6 +16,7 @@ class RecHandlerSuite extends FunSuite with BeforeAndAfter {
 
     before {
         mongo =  MongoClient()("october-test")
+        mongo.dropDatabase() // Clear out from other testing
         handler = new RecHandler(mongo)
         handler.addUser(10l)
         handler.addUser(20l)
