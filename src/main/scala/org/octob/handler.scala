@@ -52,7 +52,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
 
     // TODO: Make the limit in this and recPosts work on the database level!
     override def textSearch(tokens: Seq[String], limit: Int): Future[Map[Long, Double]] = Future.value(
-        searchInternal(tokens.map(x => (x -> 1l)).toMap).toList.sortBy{-_._2}.slice(0, limit).toMap)
+        searchInternal(tokens.map(x => (x -> 5l)).toMap).toList.sortBy{-_._2}.slice(0, limit).toMap)
 
     override def recPosts(userId: Long, limit: Int): Future[PostList] = {
         logger.info("posts requested!")
@@ -70,21 +70,22 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
     }
 
     def searchInternal(tokens: Map[String, Long]): Map[Long, Double] = {
-        val posts = TokenDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> tokens.keySet.toArray)))
+        val posts = TokenDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> tokens.toArray.filter{-_._2 < 2}.map(_._1))))
         val candidates: Set[Long] = posts.map(_.posts).flatten.toSet
         val tokenFreq: Map[String,Long] = posts.map { case (x: MToken) => x.id -> x.posts.size.toLong }.toMap
         val docCount: Long = mongo("posts").count()
         val qVec = Util.tfIdfVec(tokens, docCount, tokenFreq)
 
         // TODO: Don't get the posts twice?
-        candidates.map {  (postId: Long) => postId ->
-            Util.dotProduct(qVec,
+        candidates.par.map {  (postId: Long) => {
+            val temptokens = PostDAO.findOneByID(id = postId).getOrElse(MPost(id=0, tokens=Map[String,Long]())).tokens
+            (postId -> Util.dotProduct(qVec,
                 Util.tfIdfVec(
-                    PostDAO.findOneByID(id = postId).getOrElse(MPost(id=0, tokens=Map[String,Long]())).tokens,
+                    temptokens,
                     docCount,
-                    PostDAO.findOneByID(id = postId).getOrElse(MPost(id=0, tokens=Map[String,Long]())).tokens.map {
+                    temptokens.map {
                         case (x: (String, Long)) => x._1 -> TokenDAO.findOneByID(id=x._1).get.posts.size.toLong }.toMap
-            ))}.toMap
+            )))}}.seq.toMap
     }
 
     override def userToPost(userId: Long, verb: october.Action, postId: Long) : Future[Boolean] = {
@@ -120,13 +121,13 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
     override def addPost(userId: Long, postId: Long, rawTokens: Seq[Token]) : Future[Boolean] = {
         logger.info("new post submitted!")
         val tokens: Map[String, Long] = (rawTokens map ((token:Token) => 
-                token.t.filterNot((p:Char) => p == '.' || p == '$') ->token.f.toLong)).toMap
+                token.t.filterNot((p:Char) => p == '.' || p == '$') -> token.f.toLong)).filter{_._2 > 1}.toMap
 
         // TODO: Start logging the id of the post (and other stuff too!
 
         PostDAO.insert(MPost(id=postId, tokens=tokens))
         val uQuery = MongoDBObject("_id" -> userId)
-        for (token <- tokens) {
+        tokens.par.map { token =>
             val query = MongoDBObject("_id" -> token._1)
             TokenDAO.update(query, $push("posts" -> postId), true, false)
             if (userId > 0) UserDAO.update(uQuery, $inc("tokens.".concat(token._1) -> token._2), false, true)
