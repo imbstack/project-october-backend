@@ -15,9 +15,6 @@ import com.twitter.logging.Logger
 // TODO: Add other persistence hook into constructor
 class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
     private val logger = Logger.get(getClass)
-    object UserDAO extends SalatDAO[MUser, Long](collection = mongo("users"))
-    object PostDAO extends SalatDAO[MPost, Long](collection = mongo("posts"))
-    object TokenDAO extends SalatDAO[MToken, String](collection = mongo("tokens"))
 
     override def ping(): Future[String] = {
         logger.info("Ping received.")
@@ -80,9 +77,9 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
         candidates.map {  (postId: Long) => postId ->
             Util.dotProduct(qVec,
                 Util.tfIdfVec(
-                    PostDAO.findOneByID(id = postId).getOrElse(MPost(id=0, tokens=Map[String,Long]())).tokens,
+                    PostDAO.findOneByID(id = postId).getOrElse(MPost(id=0)).tokens,
                     docCount,
-                    PostDAO.findOneByID(id = postId).getOrElse(MPost(id=0, tokens=Map[String,Long]())).tokens.map {
+                    PostDAO.findOneByID(id = postId).getOrElse(MPost(id=0)).tokens.map {
                         case (x: (String, Long)) => x._1 -> TokenDAO.findOneByID(id=x._1).get.posts.size.toLong }.toMap
             ))}.toMap
     }
@@ -112,7 +109,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
 
     override def addUser(userId: Long) : Future[Boolean] = {
         logger.info("new user!")
-        val u = MUser(id=userId, tokens=Map[String,Long](), friends=Seq[Long]())
+        val u = MUser(id=userId)
         UserDAO.insert(u, new WriteConcern(1))
         Future.value(true)
     }
@@ -124,7 +121,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
 
         // TODO: Start logging the id of the post (and other stuff too!
 
-        PostDAO.insert(MPost(id=postId, tokens=tokens))
+        PostDAO.insert(MPost(id=postId))
         val uQuery = MongoDBObject("_id" -> userId)
         for (token <- tokens) {
             val query = MongoDBObject("_id" -> token._1)

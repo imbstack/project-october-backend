@@ -16,6 +16,8 @@ import com.twitter.logging.Logger
 
 object RecServer {
     private val logger = Logger.get(getClass)
+    val config = getConfig()
+    val mongo =  MongoClient(config.getString("mongo.host"), config.getInt("mongo.port"))(config.getString("mongo.db"))
 
     def getConfig(): Config = {
         val config = ConfigFactory.load().getConfig("base")
@@ -29,13 +31,10 @@ object RecServer {
     }
 
     def main(args: Array[String]) {
-        val config = getConfig()
-
-        val mongoClient =  MongoClient(config.getString("mongo.host"), config.getInt("mongo.port"))(config.getString("mongo.db"))
 
         // Now set up Thrift server and listen
         val protocol = new TBinaryProtocol.Factory()
-        val handler = new RecHandler(mongoClient)
+        val handler = new RecHandler(mongo)
         val service = new Recommender.FinagledService(handler, protocol)
         val address = new InetSocketAddress(config.getString("server.host"),
             config.getInt("server.port"))
