@@ -70,7 +70,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
     }
 
     def searchInternal(tokens: Map[String, Long]): Map[Long, Double] = {
-        val posts = TokenDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> tokens.toArray.filter{-_._2 < 2}.map(_._1))))
+        val posts = TokenDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> tokens.toArray.filter{_._2 > 2}.map(_._1))))
         val candidates: Set[Long] = posts.map(_.posts).flatten.toSet
         val tokenFreq: Map[String,Long] = posts.map { case (x: MToken) => x.id -> x.posts.size.toLong }.toMap
         val docCount: Long = mongo("posts").count()
@@ -121,7 +121,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
     override def addPost(userId: Long, postId: Long, rawTokens: Seq[Token]) : Future[Boolean] = {
         logger.info("new post submitted!")
         val tokens: Map[String, Long] = (rawTokens map ((token:Token) => 
-                token.t.filterNot((p:Char) => p == '.' || p == '$') -> token.f.toLong)).filter{_._2 > 1}.toMap
+                token.t.filterNot((p:Char) => p == '.' || p == '$') -> token.f.toLong)).filter{_._2 > 2}.toMap
 
         // TODO: Start logging the id of the post (and other stuff too!
 
