@@ -55,7 +55,8 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
         searchInternal(tokens.map(x => (x -> 5l)).toMap).toList.sortBy{-_._2}.slice(0, limit).toMap)
 
     override def recPosts(userId: Long, limit: Int): Future[PostList] = {
-        logger.info("posts requested!")
+        logger.info("posts requested")
+        val t0 = System.nanoTime()
         // TODO: Throw errors if user doesn't exist
         val user: MUser = UserDAO.findOneByID(id = userId).get
         // TODO: Get all of the friends in one query rather than a bunch of findOnes
@@ -65,27 +66,24 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
             }
         }
 
+        logger.info("posts returned in "+(System.nanoTime() - t0)+"ns ("+(System.nanoTime()-t0)/1000000000.0+" seconds)")
         // TODO: Merge these into a list returned from friends!
         Future.value(PostList(Option(0.5), results.map(post => Post(post._1, Some(post._2))).toSeq.slice(0, limit)))
     }
 
-    def searchInternal(tokens: Map[String, Long]): Map[Long, Double] = {
-        val posts = TokenDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> tokens.toArray.filter{_._2 > 2}.map(_._1))))
-        val candidates: Set[Long] = posts.map(_.posts).flatten.toSet
-        val tokenFreq: Map[String,Long] = posts.map { case (x: MToken) => x.id -> x.posts.size.toLong }.toMap
-        val docCount: Long = mongo("posts").count()
-        val qVec = Util.tfIdfVec(tokens, docCount, tokenFreq)
-
-        // TODO: Don't get the posts twice?
-        candidates.par.map {  (postId: Long) => {
-            val temptokens = PostDAO.findOneByID(id = postId).getOrElse(MPost(id=0, tokens=Map[String,Long]())).tokens
-            (postId -> Util.dotProduct(qVec,
-                Util.tfIdfVec(
-                    temptokens,
-                    docCount,
-                    temptokens.map {
-                        case (x: (String, Long)) => x._1 -> TokenDAO.findOneByID(id=x._1).get.posts.size.toLong }.toMap
-            )))}}.seq.toMap
+    def searchInternal(rawTokens: Map[String, Long]): Map[Long, Double] = {
+        val fTokens = rawTokens.toArray.filter{_._2 > 1}.map(_._1)
+        val uTokens = TokenDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> fTokens)))
+        val candidates = uTokens.map(_.posts).flatten.toSet
+        val tokenMap = TokenDAO.find(MongoDBObject("posts" -> MongoDBObject("$in" -> candidates))).map{x => x.id -> x.df}.toMap
+        val postMap = PostDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> candidates))).map{x => x.id -> x.tokens}.toMap
+        val docCount = mongo("posts").count()
+        val uVec = Util.tfIdfVec(rawTokens, docCount, tokenMap)
+        //println(tokenMap mkString ", ")
+        //println(postMap mkString ", ")
+        postMap.par.map {
+            case (id: Long, pTokens: Map[String, Long]) => id -> Util.dotProduct(uVec, Util.tfIdfVec(pTokens, docCount, tokenMap))
+        }.seq.toMap
     }
 
     override def userToPost(userId: Long, verb: october.Action, postId: Long) : Future[Boolean] = {
@@ -130,6 +128,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
         tokens.par.map { token =>
             val query = MongoDBObject("_id" -> token._1)
             TokenDAO.update(query, $push("posts" -> postId), true, false)
+            TokenDAO.update(query, $inc("df" -> 1l), true, false)
             if (userId > 0) UserDAO.update(uQuery, $inc("tokens.".concat(token._1) -> token._2), false, true)
         }
         logger.info("new post committed!")
