@@ -24,7 +24,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
     override def addUserTerms(userId: Long, terms: Seq[String]): Future[Boolean] = {
         val uQuery = MongoDBObject("_id" -> userId)
         for (term <- terms) {
-            UserDAO.update(uQuery, $inc("tokens.".concat(term.filterNot((p:Char) => p == '.' || p == '$')) -> 1l), false, true)
+            UserDAO.update(uQuery, $inc("tokens.".concat(term.filterNot((p:Char) => p == '.' || p == '$')) -> 100l), false, true)
         }
         Future.value(true)
     }
