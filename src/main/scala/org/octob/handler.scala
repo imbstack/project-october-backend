@@ -75,7 +75,8 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
         val fTokens = rawTokens.toArray.filter{_._2 > 1}.map(_._1)
         val uTokens = TokenDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> fTokens)))
         val candidates = uTokens.map(_.posts).flatten.toSet
-        val tokenMap = TokenDAO.find(MongoDBObject("posts" -> MongoDBObject("$in" -> candidates))).map{x => x.id -> x.df}.toMap
+        val tokenMap = uTokens.map{x => x.id -> x.df}.toMap
+        //val tokenMap = TokenDAO.find(MongoDBObject("posts" -> MongoDBObject("$in" -> candidates))).map{x => x.id -> x.df}.toMap
         val postMap = PostDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> candidates))).map{x => x.id -> x.tokens}.toMap
         val docCount = mongo("posts").count()
         val uVec = Util.tfIdfVec(rawTokens, docCount, tokenMap)

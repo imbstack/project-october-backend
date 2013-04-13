@@ -41,7 +41,7 @@ class RecHandlerSuite extends FunSuite with BeforeAndAfter {
     test("text search does something sane") {
         handler.addPost(10l, 1l, Seq(Token("a", 10), Token("b", 23)))
         handler.addPost(10l, 2l, Seq(Token("b", 10), Token("c", 21), Token("e", 20)))
-        expect(Map(2 -> 7.809523809523809)) {
+        expect(Map(2 -> 1.9523809523809523)) {
             handler.textSearch(Seq("c", "e"), 100).get
         }
     }
