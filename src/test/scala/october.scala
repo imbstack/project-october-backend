@@ -1,11 +1,6 @@
 package org.octob.test
 
-import org.scalatest.FunSuite
-import org.scalatest.BeforeAndAfter
-import com.twitter.util._
-import october._
-
-class ServerSuite extends FunSuite with BeforeAndAfter {
+class ServerSuite extends BaseTest {
 
     // TODO: Add some sort of integration tests here
 }

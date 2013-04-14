@@ -1,6 +1,5 @@
 package org.octob
 
-
 object Util {
 
     /**

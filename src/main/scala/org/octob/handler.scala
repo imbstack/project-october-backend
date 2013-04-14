@@ -12,12 +12,8 @@ import com.novus.salat.dao._
 import com.twitter.util._
 import com.twitter.logging.Logger
 
-// TODO: Add other persistence hook into constructor
-class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
+object RecHandler extends october.Recommender.FutureIface {
     private val logger = Logger.get(getClass)
-    object UserDAO extends SalatDAO[MUser, Long](collection = mongo("users"))
-    object PostDAO extends SalatDAO[MPost, Long](collection = mongo("posts"))
-    object TokenDAO extends SalatDAO[MToken, String](collection = mongo("tokens"))
 
     override def ping(): Future[String] = {
         logger.info("Ping received.")
@@ -78,7 +74,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
         val tokenMap = uTokens.map{x => x.id -> x.df}.toMap
         //val tokenMap = TokenDAO.find(MongoDBObject("posts" -> MongoDBObject("$in" -> candidates))).map{x => x.id -> x.df}.toMap
         val postMap = PostDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> candidates))).map{x => x.id -> x.tokens}.toMap
-        val docCount = mongo("posts").count()
+        val docCount = RecServer.mongo("posts").count()
         val uVec = Util.tfIdfVec(rawTokens, docCount, tokenMap)
         //println(tokenMap mkString ", ")
         //println(postMap mkString ", ")
@@ -112,7 +108,7 @@ class RecHandler(mongo: MongoDB) extends october.Recommender.FutureIface {
 
     override def addUser(userId: Long) : Future[Boolean] = {
         logger.info("new user!")
-        val u = MUser(id=userId, tokens=Map[String,Long](), friends=Seq[Long]())
+        val u = MUser(id=userId)
         UserDAO.insert(u, new WriteConcern(1))
         Future.value(true)
     }

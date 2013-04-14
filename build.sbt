@@ -18,3 +18,5 @@ libraryDependencies ++= Seq("org.apache.thrift" % "libthrift" % "0.9.0",
                             "com.twitter" %% "util-collection" % "5.3.10",
                             "org.slf4j" % "slf4j-simple" % "1.7.5",
                             "com.twitter" %% "util-core" % "6.0.5")
+
+testOptions in Test := Seq(Tests.Filter(s => s.endsWith("Suite")))

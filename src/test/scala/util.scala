@@ -1,19 +1,8 @@
 package org.octob.test
 
-import org.octob.Util
+import org.octob._
 
-import org.scalatest.FunSuite
-import org.scalatest.BeforeAndAfter
-import com.twitter.logging.config._
-import com.twitter.logging.Logger
-
-class UtilSuite extends FunSuite with BeforeAndAfter {
-
-    val logconf = new LoggerConfig { 
-        node = ""
-        level = Logger.ERROR
-    }
-    logconf()
+class UtilSuite extends BaseTest { 
 
     val VMap = Map[String,Double] _
     val LMap = Map[String,Long] _
