@@ -1,5 +1,7 @@
 package org.octob
 
+import org.scala_tools.time.Imports._
+
 object Util {
 
     /**
@@ -23,4 +25,19 @@ object Util {
         vec.map {case (s: String, v: Long) =>
             s -> (v.toDouble / (0l /: vec) { case (a: Long, (k: String, v: Long)) =>
                 (if (a > v) a else v)}) * (docCount.toDouble / countMap.getOrElse(s, docCount))}
+    /**
+     * Takes a weight and a time and scales it according to our scaling factor
+     * @param weight: intitial weight of post
+     * @param time: time the post was submitted
+     */
+    def timeScale(weight: Double, time: DateTime): Double = {
+        val diff = (time to DateTime.now).millis / 3600000.0
+        // TODO: set these 10 hour things in a config file
+        if (diff < 10) {
+            weight
+        }
+        else {
+            weight / math.log(diff - 9)
+        }
+    }
 }

@@ -7,11 +7,23 @@ import com.novus.salat.annotations._
 import com.novus.salat.global._
 import com.novus.salat.dao._
 
-case class MUser(@Key("_id") id: Long, tokens: Map[String, Long] = Map(), friends: Seq[Long] = List())
+import org.scala_tools.time.Imports._
+import com.mongodb.casbah.commons.conversions.scala.{RegisterConversionHelpers, RegisterJodaTimeConversionHelpers}
 
-case class MToken(@Key("_id") id: String, df: Long, posts: Seq[Long] = List())
+case class MUser(@Key("_id") id: Long,
+    tokens: Map[String, Long] = Map(),
+    friends: Seq[Long] = List())
 
-case class MPost(@Key("_id") id: Long, tokens: Map[String, Long] = Map())
+case class MToken(@Key("_id") id: String,
+    df: Long,
+    posts: Seq[Long] = List())
+
+case class MPost(@Key("_id") id: Long,
+    posted: DateTime = DateTime.now,
+    tokens: Map[String, Long] = Map()) {
+        RegisterConversionHelpers()
+        RegisterJodaTimeConversionHelpers()
+    }
 
 object UserDAO extends SalatDAO[MUser, Long](collection = RecServer.mongo("users")) {
     def create(userId: Long) {
@@ -37,16 +49,20 @@ object PostDAO extends SalatDAO[MPost, Long](collection = RecServer.mongo("posts
         }
     }
 
-    def search(rawTokens: Map[String, Long]): Map[Long, Double] = {
+    // TODO: Maybe don't scale textsearch by time
+    def search(rawTokens: Map[String, Long], limit: Int): Map[Long, Double] = {
         val fTokens = rawTokens.toArray.filter{_._2 > 1}.map(_._1)
         val uTokens = TokenDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> fTokens)))
         val candidates = uTokens.map(_.posts).flatten.toSet
         val tokenMap = uTokens.map{x => x.id -> x.df}.toMap
-        val postMap = this.find(MongoDBObject("_id" -> MongoDBObject("$in" -> candidates))).map{x => x.id -> x.tokens}.toMap
+        val postMap = this.find(MongoDBObject("_id" -> MongoDBObject("$in" -> candidates)))
+            .sort(orderBy = MongoDBObject("posted" -> -1))
+            .limit(limit).map{x => x.id -> (x.tokens, x.posted)}.toMap
         val docCount = RecServer.mongo("posts").count()
         val uVec = Util.tfIdfVec(rawTokens, docCount, tokenMap)
         postMap.par.map {
-            case (id: Long, pTokens: Map[String, Long]) => id -> Util.dotProduct(uVec, Util.tfIdfVec(pTokens, docCount, tokenMap))
+            case (id: Long, (pTokens: Map[String, Long], time: DateTime)) => id -> Util.timeScale(
+                Util.dotProduct(uVec, Util.tfIdfVec(pTokens, docCount, tokenMap)), time)
         }.seq.toMap
     }
 }

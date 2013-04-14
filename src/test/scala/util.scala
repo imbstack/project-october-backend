@@ -1,8 +1,10 @@
 package org.octob.test
 
+import org.scalatest.matchers.ShouldMatchers
 import org.octob._
+import org.scala_tools.time.Imports._
 
-class UtilSuite extends BaseTest { 
+class UtilSuite extends BaseTest with ShouldMatchers {
 
     val VMap = Map[String,Double] _
     val LMap = Map[String,Long] _
@@ -37,5 +39,15 @@ class UtilSuite extends BaseTest {
         expect(Map("a" -> 8.333333333333332, "b" -> 2.0833333333333335, "c" -> 20.0)) {
             Util.tfIdfVec(userMap, 25, docCountMap)
         }
+    }
+
+    test("timescaling works within flat period") {
+        expect(0.5) {
+            Util.timeScale(0.5, DateTime.now)
+        }
+    }
+
+    test("timescaling works within logarithmic period") {
+        Util.timeScale(0.5, DateTime.now - 2.days) should be (0.136479207020669 plusOrMinus 0.0000005)
     }
 }
