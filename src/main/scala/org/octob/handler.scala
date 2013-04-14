@@ -10,13 +10,14 @@ import com.novus.salat.global._
 import com.novus.salat.dao._
 
 import com.twitter.util._
-import com.twitter.logging.Logger
 
-object RecHandler extends october.Recommender.FutureIface {
-    private val logger = Logger.get(getClass)
+import grizzled.slf4j.Logging
+
+// XXX: Logging is a mess at the moment
+object RecHandler extends october.Recommender.FutureIface with Logging {
 
     override def ping(): Future[String] = {
-        logger.info("Ping received.")
+        info("Ping received.")
         Future.value("Pong")
     }
 
@@ -45,7 +46,7 @@ object RecHandler extends october.Recommender.FutureIface {
         PostDAO.search(tokens.map(x => (x -> 5l)).toMap).toList.sortBy{-_._2}.slice(0, limit).toMap)
 
     override def recPosts(userId: Long, limit: Int): Future[PostList] = {
-        logger.info("posts requested")
+        info(<a>post requested (user: {userId})</a>.text)
         val t0 = System.nanoTime()
         val user: MUser = UserDAO.findOneByID(id = userId).get
         // TODO: Get all of the friends in one query rather than a bunch of findOnes
@@ -55,12 +56,12 @@ object RecHandler extends october.Recommender.FutureIface {
             }
         }
 
-        logger.info("posts returned in "+(System.nanoTime() - t0)+"ns ("+(System.nanoTime()-t0)/1000000000.0+" seconds)")
+        info(<a>posts for (user: {userId}) returned in </a>.text+(System.nanoTime() - t0)+"ns ("+(System.nanoTime()-t0)/1000000000.0+" seconds)")
         Future.value(PostList(Option(0.5), results.map(post => Post(post._1, Some(post._2))).toSeq.slice(0, limit)))
     }
 
     override def userToPost(userId: Long, verb: october.Action, postId: Long) : Future[Boolean] = {
-        logger.info("user did something to post")
+        info(<a>(user: {userId}) {verb} post</a>.text)
         val uQuery = MongoDBObject("_id" -> userId)
         val post = PostDAO.findOneByID(id = postId).get
         var multiplier = verb match {
@@ -77,25 +78,24 @@ object RecHandler extends october.Recommender.FutureIface {
     }
 
     override def userToComment(userId: Long, verb: october.Action, commentId: Long) : Future[Boolean] = {
-        logger.info("user did something to comment")
+        info("user did something to comment")
         Future.value(true)
     }
 
     override def addUser(userId: Long) : Future[Boolean] = {
-        logger.info("new user!")
         UserDAO.create(userId)
+        info(<a>User ({userId}) added</a>.text)
         Future.value(true)
     }
 
     override def addPost(userId: Long, postId: Long, rawTokens: Seq[Token]) : Future[Boolean] = {
-        logger.info("new post submitted!")
+        info(<a>new post submitted (user: {userId}, post: {postId})</a>.text)
         val tokens: Map[String, Long] = (rawTokens map ((token:Token) => 
                 token.t.filterNot((p:Char) => p == '.' || p == '$') -> token.f.toLong)).filter{_._2 > 2}.toMap
 
-        // TODO: Start logging the id of the post (and other stuff too!
         PostDAO.create(postId, userId, tokens)
 
-        logger.info("new post committed!")
+        info(<a>new post (user: {userId} post: {postId}) committed</a>.text)
         Future.value(true)
     }
 }

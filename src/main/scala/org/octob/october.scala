@@ -12,10 +12,10 @@ import org.apache.thrift.protocol.TBinaryProtocol
 import java.net.InetSocketAddress
 import com.twitter.finagle.builder.ServerBuilder
 import com.twitter.finagle.thrift.ThriftServerFramedCodec
-import com.twitter.logging.Logger
 
-object RecServer {
-    private val logger = Logger.get(getClass)
+import grizzled.slf4j.Logging
+
+object RecServer extends Logging {
     val config = getConfig()
     var mongo = MongoClient(config.getString("mongo.host"), config.getInt("mongo.port"))(config.getString("mongo.db"))
 
@@ -38,7 +38,8 @@ object RecServer {
         val service = new Recommender.FinagledService(handler, protocol)
         val address = new InetSocketAddress(config.getString("server.host"),
             config.getInt("server.port"))
-        logger.info("October Recommender Service starting in: " + config.getString("name"))
+        info("October Recommender Service starting in: " + config.getString("name") + " on " +
+            config.getString("server.host") +":"+ config.getInt("server.port"))
         var builder = ServerBuilder()
             .codec(ThriftServerFramedCodec())
             .name("recommender_service")

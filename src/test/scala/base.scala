@@ -7,15 +7,8 @@ import com.mongodb.casbah.Imports._
 import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
 import com.twitter.logging.config._
-import com.twitter.logging.Logger
 
 class BaseTest extends FunSuite with BeforeAndAfter {
-
-    val logconf = new LoggerConfig { 
-        node = ""
-        level = Logger.ERROR
-    }
-    logconf()
 
     var mongo: MongoDB = _
 
