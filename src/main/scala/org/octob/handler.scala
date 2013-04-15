@@ -29,6 +29,14 @@ object RecHandler extends october.Recommender.FutureIface with Logging {
         Future.value(true)
     }
 
+    override def removeUserTerms(userId: Long, terms: Seq[String]): Future[Boolean] = {
+        val uQuery = MongoDBObject("_id" -> userId)
+        for (term <- terms) {
+            UserDAO.update(uQuery, $unset("tokens.".concat(term.filterNot((p:Char) => p == '.' || p == '$'))), false, true)
+        }
+        Future.value(true)
+    }
+
     override def userToUser(actionerId: Long, action: october.Action, actioneeId: Long): Future[Boolean] = {
         action match {
             case october.Action.Follow => UserDAO.follow(actionerId, actioneeId)
@@ -42,16 +50,16 @@ object RecHandler extends october.Recommender.FutureIface with Logging {
         UserDAO.findOneById(id = userId).get.tokens.toList.sortBy{-_._2}.slice(0, limit).toMap)
 
     // TODO: Make the limit in this and recPosts work on the database level!
-    override def textSearch(tokens: Seq[String], limit: Int): Future[Map[Long, Double]] = Future.value(
-        PostDAO.search(tokens.map(x => (x -> 5l)).toMap, limit))
+    override def textSearch(tokens: Seq[String], limit: Int, skip: Int): Future[Map[Long, Double]] = Future.value(
+        PostDAO.search(tokens.map(x => (x -> 5l)).toMap, limit, skip))
 
-    override def recPosts(userId: Long, limit: Int): Future[PostList] = {
+    override def recPosts(userId: Long, limit: Int, skip: Int): Future[PostList] = {
         info(<a>post requested (user: {userId})</a>.text)
         val t0 = System.nanoTime()
         val user: MUser = UserDAO.findOneById(id = userId).get
         // TODO: Get all of the friends in one query rather than a bunch of findOnes
-        val results: Map[Long, Double] = (PostDAO.search(user.tokens, limit) /: user.friends) {
-            case (a: Map[Long, Double], b: Long) => a ++ PostDAO.search(UserDAO.findOneById(id = b).get.tokens, limit).map {
+        val results: Map[Long, Double] = (PostDAO.search(user.tokens, limit, skip) /: user.friends) {
+            case (a: Map[Long, Double], b: Long) => a ++ PostDAO.search(UserDAO.findOneById(id = b).get.tokens, limit, skip).map {
                 case ((a: Long, b: Double)) => (a -> 0.45 * b) // TODO: Make that scale not a magic value
             }
         }

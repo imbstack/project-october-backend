@@ -50,13 +50,14 @@ object PostDAO extends SalatDAO[MPost, Long](collection = RecServer.mongo("posts
     }
 
     // TODO: Maybe don't scale textsearch by time
-    def search(rawTokens: Map[String, Long], limit: Int): Map[Long, Double] = {
+    def search(rawTokens: Map[String, Long], limit: Int, skip: Int): Map[Long, Double] = {
         val fTokens = rawTokens.toArray.filter{_._2 > 1}.map(_._1)
         val uTokens = TokenDAO.find(MongoDBObject("_id" -> MongoDBObject("$in" -> fTokens)))
         val candidates = uTokens.map(_.posts).flatten.toSet
         val tokenMap = uTokens.map{x => x.id -> x.df}.toMap
         val postMap = this.find(MongoDBObject("_id" -> MongoDBObject("$in" -> candidates)))
             .sort(orderBy = MongoDBObject("posted" -> -1))
+            .skip(skip)
             .limit(limit).map{x => x.id -> (x.tokens, x.posted)}.toMap
         val docCount = RecServer.mongo("posts").count()
         val uVec = Util.tfIdfVec(rawTokens, docCount, tokenMap)
