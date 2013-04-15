@@ -1,8 +1,12 @@
+import com.typesafe.sbt.SbtStartScript
+
 name := "october"
 
 version := "0.1.0"
 
 scalaVersion := "2.9.2"
+
+seq(SbtStartScript.startScriptForClassesSettings: _*)
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
