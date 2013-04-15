@@ -22,6 +22,7 @@ object RecHandler extends october.Recommender.FutureIface with Logging {
     }
 
     override def addUserTerms(userId: Long, terms: Seq[String]): Future[Boolean] = {
+        info(<a>add user terms for (user: {userId})</a>.text)
         val uQuery = MongoDBObject("_id" -> userId)
         for (term <- terms) {
             UserDAO.update(uQuery, $inc("tokens.".concat(term.filterNot((p:Char) => p == '.' || p == '$')) -> 100l), false, true)
@@ -30,6 +31,7 @@ object RecHandler extends october.Recommender.FutureIface with Logging {
     }
 
     override def removeUserTerms(userId: Long, terms: Seq[String]): Future[Boolean] = {
+        info(<a>remove user terms for (user: {userId})</a>.text)
         val uQuery = MongoDBObject("_id" -> userId)
         for (term <- terms) {
             UserDAO.update(uQuery, $unset("tokens.".concat(term.filterNot((p:Char) => p == '.' || p == '$'))), false, true)
